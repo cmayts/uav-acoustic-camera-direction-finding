@@ -1,4 +1,4 @@
-# UAV Acoustic Direction Finding
+# UAV Acoustic Camera Direction Finding
 
 Real-time-oriented acoustic direction finding for UAV detection using a synchronized four-microphone array and an SRP-PHAT signal-processing pipeline.
 
