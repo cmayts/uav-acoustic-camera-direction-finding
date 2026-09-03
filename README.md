@@ -134,7 +134,7 @@ The available experiment catalog contains 85 planned recordings covering fixed a
 - The fixed channel selection may need adjustment for other devices.
 - The parameters are research defaults and have not been validated across all UAV types or environments.
 - Synthetic examples must not be interpreted as measured performance.
-- A live-streaming radar mode is not included in this repository.
+- The included live-streaming radar mode is experimental and has not been validated as a safety-critical detector.
 
 ## License
 
