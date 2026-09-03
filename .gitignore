@@ -28,11 +28,52 @@ Thumbs.db
 # Local environment files
 .env
 .env.*
+!.env.example
+
+# Credentials, keys, certificates, and local configuration
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+credentials.*
+secrets.*
+config.local.*
 
 # Local audio recordings
-data/*.wav
-data/*.wave
-data/*.flac
+*.wav
+*.wave
+*.flac
+*.mp3
+*.m4a
+
+# Photos, videos, archives, and private experiment exports
+*.jpg
+*.jpeg
+*.heic
+*.mp4
+*.mov
+*.zip
+*.7z
+*.rar
+*.xlsx
+*.xls
+*.ods
+
+# Local data sets and generated tabular output
+data/*
+!data/README.md
+!data/.gitkeep
+*.csv
+*.tsv
+*.parquet
+*.npy
+*.npz
+*.pkl
+*.pickle
 
 # Generated analysis outputs; curated examples remain tracked
 results/*/
