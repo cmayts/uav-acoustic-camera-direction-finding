@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="760" viewBox="0 0 760 760" role="img" aria-labelledby="title desc">
+  <title id="title">Four-microphone array layout and azimuth convention</title>
+  <desc id="desc">Microphones A, B, C, and D form a square. Zero degrees points down, 90 degrees right, 180 degrees up, and 270 degrees left.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2563eb"/>
+    </marker>
+  </defs>
+  <rect width="760" height="760" rx="24" fill="#f8fafc"/>
+  <text x="380" y="48" text-anchor="middle" font-family="sans-serif" font-size="26" font-weight="700" fill="#0f172a">Microphone Array and Azimuth Reference</text>
+  <circle cx="380" cy="385" r="220" fill="#ffffff" stroke="#334155" stroke-width="4"/>
+  <line x1="380" y1="385" x2="380" y2="680" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="380" y1="385" x2="675" y2="385" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="380" y1="385" x2="380" y2="90" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+  <line x1="380" y1="385" x2="85" y2="385" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)"/>
+  <g font-family="sans-serif" font-size="22" font-weight="700" fill="#1d4ed8">
+    <text x="380" y="726" text-anchor="middle">0°</text>
+    <text x="708" y="393" text-anchor="middle">90°</text>
+    <text x="380" y="80" text-anchor="middle">180°</text>
+    <text x="48" y="393" text-anchor="middle">270° / −90°</text>
+  </g>
+  <g stroke="#0f172a" stroke-width="4" fill="#f59e0b">
+    <circle cx="250" cy="515" r="26"/><circle cx="510" cy="515" r="26"/>
+    <circle cx="510" cy="255" r="26"/><circle cx="250" cy="255" r="26"/>
+  </g>
+  <g font-family="sans-serif" font-size="26" font-weight="700" fill="#0f172a" text-anchor="middle" dominant-baseline="central">
+    <text x="250" y="515">A</text><text x="510" y="515">B</text>
+    <text x="510" y="255">C</text><text x="250" y="255">D</text>
+  </g>
+  <circle cx="380" cy="385" r="7" fill="#0f172a"/>
+  <text x="380" y="620" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#475569">Array radius r = 32 mm; d = r / √2</text>
+</svg>
