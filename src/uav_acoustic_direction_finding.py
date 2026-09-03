@@ -32,6 +32,7 @@ Current hardware:
 reSpeaker V3 USB 4Mic-ARRAY XVF3000 (the array geometry is defined below).
 Version: 25.03.2026 V1.12
 """
+import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -63,94 +64,74 @@ SHOW_PLOTS = True
 EXPORT_PRESENTATION_NOTES = True
 
 # Mode configuration: hover or circle
-if MODE == "hover":
-    SNAPSHOT_SEC = 0.10
-    HOP_SEC = 0.05
+def configure_mode(mode):
+    global MODE, SNAPSHOT_SEC, HOP_SEC, MAIN_BAND, SELECTION_BAND
+    global MULTI_BANDS, USE_TRACKING, TRACK_LAMBDA, USE_SMOOTHING
+    global SMOOTH_KERNEL, STRICT_TOP_ENERGY_PERCENT, SOFT_TOP_ENERGY_PERCENT
+    global MIN_RUN_LENGTH_STRICT, MIN_RUN_LENGTH_SOFT
+    global USE_SPECTRAL_FLATNESS_FILTER, MAX_FLATNESS_STRICT
+    global MAX_FLATNESS_SOFT, USE_PEAK_RATIO_FILTER, PEAK_RATIO_THR
+    global USE_SNR_FILTER, MIN_SNR_DB, USE_PHAT, PHAT_ALPHA
 
+    MODE = mode
     MAIN_BAND = (400.0, 1200.0)
-    SELECTION_BAND = (500.0, 1500.0)
-
     MULTI_BANDS = [
         (400.0, 800.0),
         (800.0, 1400.0),
         (1400.0, 2200.0),
     ]
-
     USE_TRACKING = True
-    TRACK_LAMBDA = 0.003
-
     USE_SMOOTHING = True
-    SMOOTH_KERNEL = 7
-
-    STRICT_TOP_ENERGY_PERCENT = 35
-    SOFT_TOP_ENERGY_PERCENT = 60
-
-    MIN_RUN_LENGTH_STRICT = 2
-    MIN_RUN_LENGTH_SOFT = 1
-
     USE_SPECTRAL_FLATNESS_FILTER = True
-    MAX_FLATNESS_STRICT = 0.75
-    MAX_FLATNESS_SOFT = 0.90
-
     USE_PEAK_RATIO_FILTER = False
-    PEAK_RATIO_THR = 1.08
-
     USE_SNR_FILTER = False
-    MIN_SNR_DB = 3.0
-
     USE_PHAT = True
-    PHAT_ALPHA = 0.6
 
-elif MODE == "circle":
-    SNAPSHOT_SEC = 0.05
-    HOP_SEC = 0.025
+    if mode == "hover":
+        SNAPSHOT_SEC = 0.10
+        HOP_SEC = 0.05
+        SELECTION_BAND = (500.0, 1500.0)
+        TRACK_LAMBDA = 0.003
+        SMOOTH_KERNEL = 7
+        STRICT_TOP_ENERGY_PERCENT = 35
+        SOFT_TOP_ENERGY_PERCENT = 60
+        MIN_RUN_LENGTH_STRICT = 2
+        MIN_RUN_LENGTH_SOFT = 1
+        MAX_FLATNESS_STRICT = 0.75
+        MAX_FLATNESS_SOFT = 0.90
+        PEAK_RATIO_THR = 1.08
+        MIN_SNR_DB = 3.0
+        PHAT_ALPHA = 0.6
+    elif mode == "circle":
+        SNAPSHOT_SEC = 0.05
+        HOP_SEC = 0.025
+        SELECTION_BAND = (500.0, 1700.0)
+        TRACK_LAMBDA = 0.0005
+        SMOOTH_KERNEL = 3
+        STRICT_TOP_ENERGY_PERCENT = 45
+        SOFT_TOP_ENERGY_PERCENT = 70
+        MIN_RUN_LENGTH_STRICT = 1
+        MIN_RUN_LENGTH_SOFT = 1
+        MAX_FLATNESS_STRICT = 0.90
+        MAX_FLATNESS_SOFT = 0.98
+        PEAK_RATIO_THR = 1.04
+        MIN_SNR_DB = 2.0
+        PHAT_ALPHA = 0.5
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
 
-    MAIN_BAND = (400.0, 1200.0)
-    SELECTION_BAND = (500.0, 1700.0)
 
-    MULTI_BANDS = [
-        (400.0, 800.0),
-        (800.0, 1400.0),
-        (1400.0, 2200.0),
-    ]
-
-    USE_TRACKING = True
-    TRACK_LAMBDA = 0.0005
-
-    USE_SMOOTHING = True
-    SMOOTH_KERNEL = 3
-
-    STRICT_TOP_ENERGY_PERCENT = 45
-    SOFT_TOP_ENERGY_PERCENT = 70
-
-    MIN_RUN_LENGTH_STRICT = 1
-    MIN_RUN_LENGTH_SOFT = 1
-
-    USE_SPECTRAL_FLATNESS_FILTER = True
-    MAX_FLATNESS_STRICT = 0.90
-    MAX_FLATNESS_SOFT = 0.98
-
-    USE_PEAK_RATIO_FILTER = False
-    PEAK_RATIO_THR = 1.04
-
-    USE_SNR_FILTER = False
-    MIN_SNR_DB = 2.0
-
-    USE_PHAT = True
-    PHAT_ALPHA = 0.5
-
-else:
-    raise ValueError
+configure_mode(MODE)
 
 # Microphone array geometry
 r = 0.032
 d = r / np.sqrt(2.0)
 
 MIC_POS = np.array([
-    [-d, -d],   # A
-    [+d, -d],   # B
-    [+d, +d],   # C
-    [-d, +d],   # D
+    [-d, -d],   # A: lower-left
+    [+d, -d],   # B: lower-right
+    [+d, +d],   # C: upper-right
+    [-d, +d],   # D: upper-left
 ], dtype=float)
 
 C_SOUND = 343.0
@@ -232,10 +213,16 @@ def spectrogram_1ch(x, fs):
     S_db = 20.0 * np.log10(np.maximum(np.abs(Z), 1e-10))
     return f, t, S_db
 
+def direction_unit_vector(angle_deg):
+    """Return the unit vector for 0° down, 90° right, and 180° up."""
+    theta = np.deg2rad(angle_deg)
+    return np.array([np.sin(theta), -np.cos(theta)], dtype=float)
+
+
 def steering_srp_phat(mic_xy, freqs, angles_deg, c=343.0):
     """
-    0° = +Y
-    u = [sin(theta), cos(theta)]
+    Angle convention:
+    0° = -Y (down), 90° = +X (right), 180° = +Y (up), -90° = -X (left).
     """
     A = len(angles_deg)
     M = mic_xy.shape[0]
@@ -243,8 +230,7 @@ def steering_srp_phat(mic_xy, freqs, angles_deg, c=343.0):
     S = np.empty((A, M, F), dtype=np.complex64)
 
     for ai, ang in enumerate(angles_deg):
-        th = np.deg2rad(ang)
-        u = np.array([np.sin(th), np.cos(th)], dtype=float)
+        u = direction_unit_vector(ang)
         tau = (mic_xy @ u) / c
         S[ai] = np.exp(-1j * 2.0 * np.pi * freqs[None, :] * tau[:, None]).astype(np.complex64)
 
@@ -981,8 +967,8 @@ def plot_doa_map_enhanced(result, sec_df, out_dir):
     ax1.bar(centers_rad, strict_counts / max_count, width=width_rad, bottom=0.0, alpha=0.65, label='strict density')
     if np.isfinite(result['doa_overall_multi']):
         ax1.plot([np.deg2rad(result['doa_overall_multi'])]*2, [0, 1.05], linewidth=2.0, label=f"overall={result['doa_overall_multi']:.1f}°")
-    ax1.set_theta_zero_location('N')
-    ax1.set_theta_direction(-1)
+    ax1.set_theta_zero_location('S')
+    ax1.set_theta_direction(1)
     ax1.set_ylim(0, 1.05)
     ax1.set_title('Polar DOA occupancy')
     ax1.legend(loc='upper right', bbox_to_anchor=(1.30, 1.15))
@@ -1165,7 +1151,49 @@ def export_presentation_notes(result, sec_df, out_dir):
     return path
 
 # Program entry point
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Analyze multichannel UAV audio and estimate direction of arrival."
+    )
+    parser.add_argument(
+        "--input",
+        default=INPUT_PATH,
+        help="Path to the multichannel WAV recording.",
+    )
+    parser.add_argument(
+        "--noise-reference",
+        default=OPTIONAL_NOISE_PATH,
+        help="Optional WAV file used to estimate the noise floor.",
+    )
+    parser.add_argument(
+        "--output",
+        default=OUTPUT_ROOT,
+        help="Directory where analysis artifacts will be written.",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=("hover", "circle"),
+        default=MODE,
+        help="Parameter profile used for direction tracking.",
+    )
+    parser.add_argument(
+        "--no-show",
+        action="store_true",
+        help="Generate plots without opening interactive windows.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv=None):
+    global INPUT_PATH, OPTIONAL_NOISE_PATH, OUTPUT_ROOT, SHOW_PLOTS
+
+    args = parse_args(argv)
+    INPUT_PATH = os.path.abspath(args.input)
+    OPTIONAL_NOISE_PATH = os.path.abspath(args.noise_reference)
+    OUTPUT_ROOT = os.path.abspath(args.output)
+    SHOW_PLOTS = not args.no_show
+    configure_mode(args.mode)
+
     ensure_dir(OUTPUT_ROOT)
 
     if not os.path.exists(INPUT_PATH):
