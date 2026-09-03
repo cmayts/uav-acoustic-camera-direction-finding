@@ -139,3 +139,8 @@ The available experiment catalog contains 85 planned recordings covering fixed a
 ## License
 
 Released under the MIT License. See [LICENSE](LICENSE).
+
+
+## UAV platforms used in experiments
+
+Experimental data collection and project studies used the DJI Phantom 4 Pro and DJI Mavic 2 Pro platforms. Results may depend on aircraft type, propeller condition, operating mode, distance, and the surrounding acoustic environment.
